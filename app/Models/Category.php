@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Warehouse extends Model
+class Category extends Model
 {
     protected $fillable = [
-        'code',
         'name',
-        'location',
+        'prefix',
         'description',
     ];
 

@@ -7,59 +7,63 @@ use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $warehouses = Warehouse::all();
+
+        return view('warehouses.index', compact('warehouses'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('warehouses.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
     public function show(Warehouse $warehouse)
     {
-        //
+        return view('warehouses.edit', compact('warehouse'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|unique:warehouses',
+            'name' => 'required',
+            'location' => 'required',
+            'description' => 'nullable',
+        ]);
+
+        Warehouse::create($request->all());
+
+        return redirect()->route('warehouses.index')
+            ->with('success', 'Warehouse created successfully.');
+    }
+
     public function edit(Warehouse $warehouse)
     {
-        //
+        return view('warehouses.edit', compact('warehouse'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Warehouse $warehouse)
     {
-        //
+        $request->validate([
+            'code' => 'required|unique:warehouses,code,' . $warehouse->id,
+            'name' => 'required',
+            'location' => 'required',
+            'description' => 'nullable',
+        ]);
+
+        $warehouse->update($request->all());
+
+        return redirect()->route('warehouses.index')
+            ->with('success', 'Warehouse updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Warehouse $warehouse)
     {
-        //
+        $warehouse->delete();
+
+        return redirect()->route('warehouses.index')
+            ->with('success', 'Warehouse deleted successfully.');
     }
 }
