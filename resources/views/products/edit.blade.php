@@ -44,7 +44,7 @@
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Status</label>
                     <select name="status" class="w-full rounded border-gray-300">
-                        @foreach (['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed'] as $status)
+                        @foreach (['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed', 'In Stock', 'Reserved'] as $status)
                             <option value="{{ $status }}" @selected(old('status', $product->status) === $status)>{{ $status }}</option>
                         @endforeach
                     </select>

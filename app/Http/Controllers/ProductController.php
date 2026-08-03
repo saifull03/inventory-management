@@ -2,106 +2,141 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\ItemType;
 use App\Models\Product;
 use App\Models\Warehouse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        $products = Product::with(['warehouse', 'category', 'itemType', 'creator'])
-            ->latest()
-            ->get();
+    use AuthorizesRequests;
 
-        return view('products.index', compact('products'));
+    public function index(Request $request)
+    {
+        $products = Product::query()
+            ->with(['warehouse', 'category', 'itemType', 'creator'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('product_code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('brand', 'like', "%{$search}%")
+                        ->orWhere('model', 'like', "%{$search}%")
+                        ->orWhereHas('warehouse', function ($warehouseQuery) use ($search) {
+                            $warehouseQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                            $categoryQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('itemType', function ($itemTypeQuery) use ($search) {
+                            $itemTypeQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($request->filled('warehouse_id'), fn ($query) => $query->where('warehouse_id', $request->warehouse_id))
+            ->when($request->filled('category_id'), fn ($query) => $query->where('category_id', $request->category_id))
+            ->when($request->filled('item_type_id'), fn ($query) => $query->where('item_type_id', $request->item_type_id))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('sort_by'), function ($query) use ($request) {
+                $direction = $request->get('sort_dir', 'asc');
+                $query->orderBy($request->get('sort_by'), $direction);
+            }, function ($query) {
+                $query->latest('created_at');
+            })
+            ->paginate(15)
+            ->withQueryString();
+
+        $warehouses = Warehouse::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+        $itemTypes = ItemType::orderBy('name')->get();
+
+        return view('products.index', compact('products', 'warehouses', 'categories', 'itemTypes'));
     }
 
     public function create()
     {
         return view('products.create', [
-            'warehouses' => Warehouse::all(),
-            'categories' => Category::all(),
-            'itemTypes' => ItemType::all(),
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'categories' => Category::orderBy('name')->get(),
+            'itemTypes' => ItemType::orderBy('name')->get(),
         ]);
+    }
+
+    public function store(StoreProductRequest $request)
+    {
+        $validated = $request->validated();
+        $validated['created_by'] = auth()->id();
+        $validated['product_code'] = $this->generateProductCode($validated['category_id']);
+
+        if ($request->hasFile('image')) {
+            $validated['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        Product::create($validated);
+
+        return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 
     public function show(Product $product)
     {
         return view('products.edit', [
             'product' => $product,
-            'warehouses' => Warehouse::all(),
-            'categories' => Category::all(),
-            'itemTypes' => ItemType::all(),
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'categories' => Category::orderBy('name')->get(),
+            'itemTypes' => ItemType::orderBy('name')->get(),
         ]);
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'product_code' => ['required', 'string', 'max:100', 'unique:products,product_code'],
-            'name' => ['required', 'string', 'max:255'],
-            'brand' => ['required', 'string', 'max:255'],
-            'model' => ['required', 'string', 'max:255'],
-            'serial_number' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'warehouse_id' => ['required', 'exists:warehouses,id'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'item_type_id' => ['required', 'exists:item_types,id'],
-            'status' => ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed'])],
-            'purchase_date' => ['nullable', 'date'],
-            'purchase_price' => ['nullable', 'numeric'],
-        ]);
-
-        $validated['created_by'] = auth()->id();
-
-        Product::create($validated);
-
-        return redirect()->route('products.index')
-            ->with('success', 'Product created successfully.');
     }
 
     public function edit(Product $product)
     {
         return view('products.edit', [
             'product' => $product,
-            'warehouses' => Warehouse::all(),
-            'categories' => Category::all(),
-            'itemTypes' => ItemType::all(),
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'categories' => Category::orderBy('name')->get(),
+            'itemTypes' => ItemType::orderBy('name')->get(),
         ]);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'product_code' => ['required', 'string', 'max:100', Rule::unique('products', 'product_code')->ignore($product->id)],
-            'name' => ['required', 'string', 'max:255'],
-            'brand' => ['required', 'string', 'max:255'],
-            'model' => ['required', 'string', 'max:255'],
-            'serial_number' => ['nullable', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'warehouse_id' => ['required', 'exists:warehouses,id'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'item_type_id' => ['required', 'exists:item_types,id'],
-            'status' => ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed'])],
-            'purchase_date' => ['nullable', 'date'],
-            'purchase_price' => ['nullable', 'numeric'],
-        ]);
+        $validated = $request->validated();
+
+        if ($request->hasFile('image')) {
+            $validated['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         $product->update($validated);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully.');
+        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully.');
+        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    protected function generateProductCode(int $categoryId): string
+    {
+        $category = Category::findOrFail($categoryId);
+        $prefix = $category->prefix;
+
+        $latestProduct = Product::where('category_id', $categoryId)
+            ->latest('id')
+            ->value('product_code');
+
+        $nextNumber = 1;
+        if ($latestProduct && Str::startsWith($latestProduct, $prefix)) {
+            $lastNumber = (int) Str::substr($latestProduct, strlen($prefix));
+            $nextNumber = $lastNumber + 1;
+        }
+
+        return $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

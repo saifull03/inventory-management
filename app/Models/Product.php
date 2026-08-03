@@ -24,6 +24,7 @@ class Product extends Model
         'purchase_date',
         'purchase_price',
         'created_by',
+        'image_path',
     ];
 
     public function warehouse()

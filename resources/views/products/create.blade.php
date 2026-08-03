@@ -48,6 +48,8 @@
                         <option value="Maintenance">Maintenance</option>
                         <option value="Damaged">Damaged</option>
                         <option value="Disposed">Disposed</option>
+                        <option value="In Stock">In Stock</option>
+                        <option value="Reserved">Reserved</option>
                     </select>
                 </div>
                 <div>

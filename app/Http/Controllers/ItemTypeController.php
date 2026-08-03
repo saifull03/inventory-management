@@ -2,15 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreItemTypeRequest;
+use App\Http\Requests\UpdateItemTypeRequest;
 use App\Models\ItemType;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ItemTypeController extends Controller
 {
-    public function index()
+    use AuthorizesRequests;
+
+    public function index(Request $request)
     {
-        $itemTypes = ItemType::latest()->get();
+        $itemTypes = ItemType::query()
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('item-types.index', compact('itemTypes'));
     }
@@ -20,22 +34,16 @@ class ItemTypeController extends Controller
         return view('item-types.create');
     }
 
+    public function store(StoreItemTypeRequest $request)
+    {
+        ItemType::create($request->validated());
+
+        return redirect()->route('item-types.index')->with('success', 'Item type created successfully.');
+    }
+
     public function show(ItemType $itemType)
     {
         return view('item-types.edit', compact('itemType'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:item_types,name'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        ItemType::create($validated);
-
-        return redirect()->route('item-types.index')
-            ->with('success', 'Item type created successfully.');
     }
 
     public function edit(ItemType $itemType)
@@ -43,24 +51,17 @@ class ItemTypeController extends Controller
         return view('item-types.edit', compact('itemType'));
     }
 
-    public function update(Request $request, ItemType $itemType)
+    public function update(UpdateItemTypeRequest $request, ItemType $itemType)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('item_types', 'name')->ignore($itemType->id)],
-            'description' => ['nullable', 'string'],
-        ]);
+        $itemType->update($request->validated());
 
-        $itemType->update($validated);
-
-        return redirect()->route('item-types.index')
-            ->with('success', 'Item type updated successfully.');
+        return redirect()->route('item-types.index')->with('success', 'Item type updated successfully.');
     }
 
     public function destroy(ItemType $itemType)
     {
         $itemType->delete();
 
-        return redirect()->route('item-types.index')
-            ->with('success', 'Item type deleted successfully.');
+        return redirect()->route('item-types.index')->with('success', 'Item type deleted successfully.');
     }
 }

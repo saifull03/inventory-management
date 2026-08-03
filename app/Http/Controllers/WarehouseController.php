@@ -2,14 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreWarehouseRequest;
+use App\Http\Requests\UpdateWarehouseRequest;
 use App\Models\Warehouse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
-    public function index()
+    use AuthorizesRequests;
+
+    public function index(Request $request)
     {
-        $warehouses = Warehouse::all();
+        $warehouses = Warehouse::query()
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('location', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('warehouses.index', compact('warehouses'));
     }
@@ -19,24 +35,16 @@ class WarehouseController extends Controller
         return view('warehouses.create');
     }
 
+    public function store(StoreWarehouseRequest $request)
+    {
+        Warehouse::create($request->validated());
+
+        return redirect()->route('warehouses.index')->with('success', 'Warehouse created successfully.');
+    }
+
     public function show(Warehouse $warehouse)
     {
         return view('warehouses.edit', compact('warehouse'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'code' => 'required|unique:warehouses',
-            'name' => 'required',
-            'location' => 'required',
-            'description' => 'nullable',
-        ]);
-
-        Warehouse::create($request->all());
-
-        return redirect()->route('warehouses.index')
-            ->with('success', 'Warehouse created successfully.');
     }
 
     public function edit(Warehouse $warehouse)
@@ -44,26 +52,17 @@ class WarehouseController extends Controller
         return view('warehouses.edit', compact('warehouse'));
     }
 
-    public function update(Request $request, Warehouse $warehouse)
+    public function update(UpdateWarehouseRequest $request, Warehouse $warehouse)
     {
-        $request->validate([
-            'code' => 'required|unique:warehouses,code,' . $warehouse->id,
-            'name' => 'required',
-            'location' => 'required',
-            'description' => 'nullable',
-        ]);
+        $warehouse->update($request->validated());
 
-        $warehouse->update($request->all());
-
-        return redirect()->route('warehouses.index')
-            ->with('success', 'Warehouse updated successfully.');
+        return redirect()->route('warehouses.index')->with('success', 'Warehouse updated successfully.');
     }
 
     public function destroy(Warehouse $warehouse)
     {
         $warehouse->delete();
 
-        return redirect()->route('warehouses.index')
-            ->with('success', 'Warehouse deleted successfully.');
+        return redirect()->route('warehouses.index')->with('success', 'Warehouse deleted successfully.');
     }
 }

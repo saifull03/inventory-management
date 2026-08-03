@@ -2,15 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    public function index()
+    use AuthorizesRequests;
+
+    public function index(Request $request)
     {
-        $categories = Category::latest()->get();
+        $categories = Category::query()
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('prefix', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('categories.index', compact('categories'));
     }
@@ -20,23 +34,16 @@ class CategoryController extends Controller
         return view('categories.create');
     }
 
+    public function store(StoreCategoryRequest $request)
+    {
+        Category::create($request->validated());
+
+        return redirect()->route('categories.index')->with('success', 'Category created successfully.');
+    }
+
     public function show(Category $category)
     {
         return view('categories.edit', compact('category'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'prefix' => ['nullable', 'string', 'max:50', 'unique:categories,prefix'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        Category::create($validated);
-
-        return redirect()->route('categories.index')
-            ->with('success', 'Category created successfully.');
     }
 
     public function edit(Category $category)
@@ -44,25 +51,17 @@ class CategoryController extends Controller
         return view('categories.edit', compact('category'));
     }
 
-    public function update(Request $request, Category $category)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'prefix' => ['nullable', 'string', 'max:50', Rule::unique('categories', 'prefix')->ignore($category->id)],
-            'description' => ['nullable', 'string'],
-        ]);
+        $category->update($request->validated());
 
-        $category->update($validated);
-
-        return redirect()->route('categories.index')
-            ->with('success', 'Category updated successfully.');
+        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
 
-        return redirect()->route('categories.index')
-            ->with('success', 'Category deleted successfully.');
+        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
     }
 }
