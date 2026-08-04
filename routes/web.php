@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ItemTypeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -23,6 +24,7 @@ Route::resource('warehouses', WarehouseController::class);
 Route::resource('categories', CategoryController::class);
 Route::resource('item-types', ItemTypeController::class);
 Route::resource('products', ProductController::class);
+Route::resource('employees', EmployeeController::class);
 
 Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');

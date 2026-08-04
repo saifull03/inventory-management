@@ -60,6 +60,10 @@ class ItemTypeController extends Controller
 
     public function destroy(ItemType $itemType)
     {
+        if ($itemType->products()->exists()) {
+            return redirect()->route('item-types.index')->with('error', 'Cannot delete item type because it has associated products.');
+        }
+
         $itemType->delete();
 
         return redirect()->route('item-types.index')->with('success', 'Item type deleted successfully.');

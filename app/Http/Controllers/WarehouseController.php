@@ -61,6 +61,10 @@ class WarehouseController extends Controller
 
     public function destroy(Warehouse $warehouse)
     {
+        if ($warehouse->products()->exists()) {
+            return redirect()->route('warehouses.index')->with('error', 'Cannot delete warehouse because it has associated products.');
+        }
+
         $warehouse->delete();
 
         return redirect()->route('warehouses.index')->with('success', 'Warehouse deleted successfully.');

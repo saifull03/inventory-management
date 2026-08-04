@@ -17,6 +17,12 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-4 rounded border border-red-200 bg-red-100 p-3 text-red-800">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
