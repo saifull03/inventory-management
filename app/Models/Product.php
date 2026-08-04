@@ -6,6 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (empty($product->product_code) || $product->product_code === '[Auto-generated]') {
+                $itemType = ItemType::findOrFail($product->item_type_id);
+                $prefix = $itemType->prefix;
+
+                $latestProduct = Product::where('item_type_id', $product->item_type_id)
+                    ->latest('id')
+                    ->value('product_code');
+
+                $nextNumber = 1;
+                if ($latestProduct && \Illuminate\Support\Str::startsWith($latestProduct, $prefix)) {
+                    $lastNumber = (int) \Illuminate\Support\Str::substr($latestProduct, strlen($prefix));
+                    $nextNumber = $lastNumber + 1;
+                }
+
+                $product->product_code = $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
     protected $casts = [
         'purchase_date' => 'date',
     ];

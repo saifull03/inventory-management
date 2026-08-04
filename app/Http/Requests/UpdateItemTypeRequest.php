@@ -18,6 +18,7 @@ class UpdateItemTypeRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('item_types', 'name')->ignore($itemType?->id)],
+            'prefix' => ['required', 'string', 'max:50', Rule::unique('item_types', 'prefix')->ignore($itemType?->id)],
             'description' => ['nullable', 'string'],
         ];
     }

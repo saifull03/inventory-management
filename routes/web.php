@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('warehouses', WarehouseController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('item-types', ItemTypeController::class);
+    Route::get('/products/next-code', [ProductController::class, 'getNextCode'])->name('products.next-code');
     Route::resource('products', ProductController::class);
     Route::resource('employees', EmployeeController::class);
 

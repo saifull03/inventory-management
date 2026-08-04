@@ -20,7 +20,7 @@
 
             <div class="mb-4">
                 <label>Warehouse Code</label><br>
-                <input type="text" name="code" class="border rounded w-full p-2">
+                <input type="text" name="code" value="[Auto-generated]" readonly class="bg-gray-100 border rounded w-full p-2 text-gray-500 cursor-not-allowed">
             </div>
 
             <div class="mb-4">

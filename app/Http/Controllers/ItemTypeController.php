@@ -19,6 +19,7 @@ class ItemTypeController extends Controller
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('prefix', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 });
             })

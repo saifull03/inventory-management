@@ -22,7 +22,7 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Product Code</label>
-                    <input type="text" name="product_code" value="{{ old('product_code') }}" class="w-full rounded border-gray-300" required>
+                    <input type="text" name="product_code" value="{{ old('product_code') }}" readonly placeholder="[Select Item Type to Auto-generate]" class="w-full rounded border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed" required>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Name</label>
@@ -100,4 +100,33 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const itemTypeSelect = document.querySelector('select[name="item_type_id"]');
+            const productCodeInput = document.querySelector('input[name="product_code"]');
+
+            if (itemTypeSelect && productCodeInput) {
+                itemTypeSelect.addEventListener('change', function () {
+                    const itemTypeId = this.value;
+                    if (!itemTypeId) {
+                        productCodeInput.value = '';
+                        return;
+                    }
+
+                    productCodeInput.value = 'Generating...';
+
+                    fetch(`/products/next-code?item_type_id=${itemTypeId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            productCodeInput.value = data.code;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching product code:', error);
+                            productCodeInput.value = '';
+                        });
+                });
+            }
+        });
+    </script>
 </x-app-layout>

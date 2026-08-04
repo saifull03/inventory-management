@@ -21,7 +21,7 @@
 
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Employee ID</label>
-                <input type="text" name="employee_id" value="{{ old('employee_id') }}" class="w-full rounded border-gray-300" required>
+                <input type="text" name="employee_id" value="[Auto-generated]" readonly class="w-full rounded border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed">
             </div>
 
             <div>

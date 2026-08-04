@@ -71,7 +71,7 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
         $validated['created_by'] = auth()->id();
-        $validated['product_code'] = $this->generateProductCode($validated['category_id']);
+        $validated['product_code'] = $this->generateProductCode($validated['item_type_id']);
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('products', 'public');
@@ -122,12 +122,23 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
 
-    protected function generateProductCode(int $categoryId): string
+    public function getNextCode(Request $request)
     {
-        $category = Category::findOrFail($categoryId);
-        $prefix = $category->prefix;
+        $itemTypeId = $request->get('item_type_id');
+        if (!$itemTypeId) {
+            return response()->json(['code' => '']);
+        }
 
-        $latestProduct = Product::where('category_id', $categoryId)
+        $code = $this->generateProductCode((int) $itemTypeId);
+        return response()->json(['code' => $code]);
+    }
+
+    protected function generateProductCode(int $itemTypeId): string
+    {
+        $itemType = ItemType::findOrFail($itemTypeId);
+        $prefix = $itemType->prefix;
+
+        $latestProduct = Product::where('item_type_id', $itemTypeId)
             ->latest('id')
             ->value('product_code');
 

@@ -26,7 +26,8 @@
                 <input type="text"
                        name="code"
                        value="{{ old('code', $warehouse->code) }}"
-                       class="border rounded w-full p-2">
+                       readonly
+                       class="bg-gray-100 border rounded w-full p-2 text-gray-500 cursor-not-allowed">
             </div>
 
             <div class="mb-4">

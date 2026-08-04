@@ -28,6 +28,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Prefix</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </tr>
@@ -36,6 +37,7 @@
                     @forelse ($itemTypes as $itemType)
                         <tr>
                             <td class="px-4 py-3">{{ $itemType->name }}</td>
+                            <td class="px-4 py-3">{{ $itemType->prefix ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $itemType->description ?? '—' }}</td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('item-types.edit', $itemType) }}" class="mr-2 text-sm font-medium text-yellow-600">Edit</a>
@@ -48,7 +50,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-4 py-6 text-center text-sm text-gray-500">No item types yet.</td>
+                            <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">No item types yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

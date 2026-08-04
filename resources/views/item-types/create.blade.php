@@ -25,6 +25,11 @@
             </div>
 
             <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700">Prefix</label>
+                <input type="text" name="prefix" value="{{ old('prefix') }}" class="w-full rounded border-gray-300" required>
+            </div>
+
+            <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">Description</label>
                 <textarea name="description" class="w-full rounded border-gray-300">{{ old('description') }}</textarea>
             </div>

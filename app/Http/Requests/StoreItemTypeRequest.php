@@ -15,6 +15,7 @@ class StoreItemTypeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:item_types,name'],
+            'prefix' => ['required', 'string', 'max:50', 'unique:item_types,prefix'],
             'description' => ['nullable', 'string'],
         ];
     }
