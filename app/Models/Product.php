@@ -28,10 +28,19 @@ class Product extends Model
                 $product->product_code = $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
             }
         });
+
+        static::saving(function ($product) {
+            if (!empty($product->employee_id)) {
+                $product->status = 'Assigned';
+            } elseif ($product->status === 'Assigned') {
+                $product->status = 'Available';
+            }
+        });
     }
 
     protected $casts = [
         'purchase_date' => 'date',
+        'custom_fields' => 'array',
     ];
 
     protected $fillable = [
@@ -49,6 +58,8 @@ class Product extends Model
         'purchase_price',
         'created_by',
         'image_path',
+        'employee_id',
+        'custom_fields',
     ];
 
     public function warehouse()
@@ -69,5 +80,10 @@ class Product extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 }

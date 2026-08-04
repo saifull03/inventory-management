@@ -21,6 +21,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('item-types', ItemTypeController::class);
     Route::get('/products/next-code', [ProductController::class, 'getNextCode'])->name('products.next-code');
+    Route::patch('/products/{product}/assign', [ProductController::class, 'assignEmployee'])->name('products.assign');
     Route::resource('products', ProductController::class);
     Route::resource('employees', EmployeeController::class);
 

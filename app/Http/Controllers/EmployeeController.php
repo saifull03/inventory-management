@@ -64,6 +64,10 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        if ($employee->products()->exists()) {
+            return redirect()->route('employees.index')->with('error', 'Cannot delete employee because they have assigned products.');
+        }
+
         $employee->delete();
 
         return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
