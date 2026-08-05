@@ -34,6 +34,8 @@ class StoreProductRequest extends FormRequest
             'status' => $isLicense ? ['nullable', Rule::in(['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed', 'In Stock', 'Reserved'])] : ['required', Rule::in(['Available', 'Assigned', 'Maintenance', 'Damaged', 'Disposed', 'In Stock', 'Reserved'])],
             'purchase_date' => ['nullable', 'date'],
             'purchase_price' => ['nullable', 'numeric'],
+            'safety_stock' => ['nullable', 'integer', 'min:0'],
+            'reorder_level' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'employee_id' => ['nullable', 'exists:employees,id'],
             'custom_fields' => ['nullable', 'array'],

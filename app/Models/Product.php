@@ -54,6 +54,8 @@ class Product extends Model
         'category_id',
         'item_type_id',
         'status',
+        'safety_stock',
+        'reorder_level',
         'purchase_date',
         'purchase_price',
         'created_by',
@@ -85,5 +87,12 @@ class Product extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function getAvailableStockCountAttribute(): int
+    {
+        return static::where('name', $this->name)
+            ->whereIn('status', ['Available', 'In Stock'])
+            ->count();
     }
 }

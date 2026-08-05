@@ -58,6 +58,17 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
+        // Low stock alerts: group by product name, count available stock, check against reorder_level
+        $lowStockAlerts = Product::select('name')
+            ->selectRaw('COUNT(CASE WHEN status IN ("Available", "In Stock") THEN 1 END) as available_count')
+            ->selectRaw('MAX(reorder_level) as reorder_level')
+            ->selectRaw('MAX(safety_stock) as safety_stock')
+            ->groupBy('name')
+            ->get()
+            ->filter(function ($item) {
+                return $item->reorder_level > 0 && $item->available_count <= $item->reorder_level;
+            });
+
         $totals = [
             'assets' => $assetsCount,
             'licenses' => $licensesCount,
@@ -67,6 +78,6 @@ class DashboardController extends Controller
             'people' => $peopleCount,
         ];
 
-        return view('dashboard', compact('totals', 'statusBreakdown', 'recentActivity'));
+        return view('dashboard', compact('totals', 'statusBreakdown', 'recentActivity', 'lowStockAlerts'));
     }
 }

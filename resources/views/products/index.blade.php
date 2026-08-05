@@ -91,7 +91,12 @@
                                 <form action="{{ route('products.assign', $product) }}" method="POST" class="inline-block">
                                     @csrf
                                     @method('PATCH')
-                                    <select name="employee_id" onchange="this.form.submit()" class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none">
+                                    @php
+                                        $isRestricted = auth()->check() && auth()->user()->isEmployee() && ($product->available_stock_count <= ($product->safety_stock ?? 10));
+                                    @endphp
+                                    <select name="employee_id" onchange="this.form.submit()" 
+                                            class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none {{ $isRestricted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '' }}"
+                                            {{ $isRestricted ? 'disabled' : '' }}>
                                         <option value="">Unassigned</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->id }}" {{ $product->employee_id == $employee->id ? 'selected' : '' }}>
@@ -99,6 +104,9 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @if($isRestricted)
+                                        <span class="text-xs text-gray-450 block mt-0.5" style="font-size: 0.7rem; color: #888;">Admin only (Stock ≤ {{ $product->safety_stock ?? 10 }})</span>
+                                    @endif
                                 </form>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm">

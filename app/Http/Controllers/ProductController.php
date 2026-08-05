@@ -77,6 +77,16 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
         $validated['created_by'] = auth()->id();
+
+        if (auth()->check() && auth()->user()->isEmployee() && !empty($validated['employee_id'])) {
+            $safetyStock = isset($validated['safety_stock']) ? (int) $validated['safety_stock'] : 10;
+            $availableCount = Product::where('name', $validated['name'])
+                ->whereIn('status', ['Available', 'In Stock'])
+                ->count();
+            if ($availableCount <= $safetyStock) {
+                return redirect()->back()->withInput()->with('error', "Cannot assign product. Available stock for '{$validated['name']}' is at or below the safety stock level ({$safetyStock}). Only an administrator can assign it.");
+            }
+        }
         
         $categoryId = $validated['category_id'] ?? null;
         $category = Category::find($categoryId);
@@ -125,6 +135,16 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $validated = $request->validated();
+
+        if (auth()->check() && auth()->user()->isEmployee() && !empty($validated['employee_id']) && $product->employee_id != $validated['employee_id']) {
+            $safetyStock = isset($validated['safety_stock']) ? (int) $validated['safety_stock'] : ($product->safety_stock ?? 10);
+            $availableCount = Product::where('name', $validated['name'] ?? $product->name)
+                ->whereIn('status', ['Available', 'In Stock'])
+                ->count();
+            if ($availableCount <= $safetyStock) {
+                return redirect()->back()->withInput()->with('error', "Cannot assign product. Available stock is at or below the safety stock level ({$safetyStock}). Only an administrator can assign it.");
+            }
+        }
 
         $categoryId = $validated['category_id'] ?? null;
         $category = Category::find($categoryId);
@@ -209,6 +229,16 @@ class ProductController extends Controller
         $request->validate([
             'employee_id' => ['nullable', 'exists:employees,id'],
         ]);
+
+        if (auth()->check() && auth()->user()->isEmployee() && $request->filled('employee_id')) {
+            $safetyStock = $product->safety_stock ?? 10;
+            $availableCount = Product::where('name', $product->name)
+                ->whereIn('status', ['Available', 'In Stock'])
+                ->count();
+            if ($availableCount <= $safetyStock) {
+                return redirect()->route('products.index')->with('error', "Cannot assign product. Available stock for '{$product->name}' is at or below the safety stock level ({$safetyStock}). Only an administrator can assign it.");
+            }
+        }
 
         $product->update([
             'employee_id' => $request->get('employee_id')

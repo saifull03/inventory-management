@@ -101,6 +101,16 @@
                     <label id="purchase_price_label" class="mb-1 block text-sm font-medium text-gray-700">Purchase price</label>
                     <input type="number" step="0.01" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}" class="w-full rounded border-gray-300">
                 </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Safety Stock Level</label>
+                    <input type="number" name="safety_stock" value="{{ old('safety_stock', $product->safety_stock) }}" class="w-full rounded border-gray-300" required>
+                    <span class="text-xs text-gray-500 block mt-1">Minimum stock below which only admins can assign it.</span>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-gray-700">Re-order Level</label>
+                    <input type="number" name="reorder_level" value="{{ old('reorder_level', $product->reorder_level) }}" class="w-full rounded border-gray-300" required>
+                    <span class="text-xs text-gray-500 block mt-1">Stock level at which a re-order alert is triggered.</span>
+                </div>
 
                 <!-- License Category Fields (dynamically toggled) -->
                 <div id="license-fields-container" class="hidden col-span-2 border-t border-gray-200 pt-6 mt-4">

@@ -24,7 +24,7 @@ class ProductAssignmentTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create(['role' => 'admin']);
 
         $this->warehouse = Warehouse::create([
             'code' => 'WH-001',
@@ -329,5 +329,74 @@ class ProductAssignmentTest extends TestCase
         
         $product = Product::where('name', 'JetBrains All Products Pack')->firstOrFail();
         $this->assertEquals($customFields, $product->custom_fields);
+    }
+
+    public function test_employee_cannot_assign_product_when_stock_reaches_safety_stock(): void
+    {
+        $employeeUser = User::factory()->create(['role' => 'employee']);
+
+        $product = Product::create([
+            'product_code' => 'LT0002',
+            'name' => 'ThinkPad T14',
+            'brand' => 'Lenovo',
+            'model' => 'T14',
+            'warehouse_id' => $this->warehouse->id,
+            'category_id' => $this->category->id,
+            'item_type_id' => $this->itemType->id,
+            'created_by' => $this->user->id,
+            'status' => 'Available',
+            'safety_stock' => 10,
+            'reorder_level' => 40,
+        ]);
+
+        $employee = Employee::create([
+            'employee_id' => 'EMP-999',
+            'name' => 'Jane Smith',
+            'department' => 'HR',
+            'designation' => 'Recruiter',
+            'email' => 'jane@example.com',
+        ]);
+
+        $response = $this->actingAs($employeeUser)->patch(route('products.assign', $product), [
+            'employee_id' => $employee->id,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $this->assertNull($product->fresh()->employee_id);
+    }
+
+    public function test_admin_can_assign_product_when_stock_reaches_safety_stock(): void
+    {
+        $adminUser = User::factory()->create(['role' => 'admin']);
+
+        $product = Product::create([
+            'product_code' => 'LT0003',
+            'name' => 'ThinkPad T14s',
+            'brand' => 'Lenovo',
+            'model' => 'T14s',
+            'warehouse_id' => $this->warehouse->id,
+            'category_id' => $this->category->id,
+            'item_type_id' => $this->itemType->id,
+            'created_by' => $this->user->id,
+            'status' => 'Available',
+            'safety_stock' => 10,
+            'reorder_level' => 40,
+        ]);
+
+        $employee = Employee::create([
+            'employee_id' => 'EMP-888',
+            'name' => 'Bob Johnson',
+            'department' => 'Sales',
+            'designation' => 'Agent',
+            'email' => 'bob@example.com',
+        ]);
+
+        $response = $this->actingAs($adminUser)->patch(route('products.assign', $product), [
+            'employee_id' => $employee->id,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+        $this->assertEquals($employee->id, $product->fresh()->employee_id);
     }
 }

@@ -312,23 +312,32 @@
                         <!-- Checkout (Assign) Form -->
                         <div class="mt-4">
                             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Checkout to Employee</span>
-                            <form action="{{ route('products.assign', $product) }}" method="POST" class="space-y-3">
-                                @csrf
-                                @method('PATCH')
-                                <div>
-                                    <select name="employee_id" required class="w-full rounded border-gray-300 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
-                                        <option value="">Select Employee</option>
-                                        @foreach ($employees as $employee)
-                                            <option value="{{ $employee->id }}">
-                                                {{ $employee->name }} ({{ $employee->employee_id }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                            @php
+                                $isRestricted = auth()->check() && auth()->user()->isEmployee() && ($product->available_stock_count <= ($product->safety_stock ?? 10));
+                            @endphp
+                            @if($isRestricted)
+                                <div class="bg-gray-50 border border-gray-200 rounded p-3 text-xs text-gray-650">
+                                    Checkout is disabled because available stock ({{ $product->available_stock_count }}) has reached the safety stock limit ({{ $product->safety_stock ?? 10 }}). Only administrators can assign this item.
                                 </div>
-                                <button type="submit" class="w-full text-center rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 transition shadow-sm">
-                                    Checkout / Assign Product
-                                </button>
-                            </form>
+                            @else
+                                <form action="{{ route('products.assign', $product) }}" method="POST" class="space-y-3">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div>
+                                        <select name="employee_id" required class="w-full rounded border-gray-300 text-sm focus:border-blue-500 focus:ring focus:ring-blue-200">
+                                            <option value="">Select Employee</option>
+                                            @foreach ($employees as $employee)
+                                                <option value="{{ $employee->id }}">
+                                                    {{ $employee->name }} ({{ $employee->employee_id }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="w-full text-center rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 transition shadow-sm">
+                                        Checkout / Assign Product
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     @endif
                 </div>

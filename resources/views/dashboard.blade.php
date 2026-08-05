@@ -26,6 +26,34 @@
                 </div>
             </div>
 
+            @if(auth()->check() && auth()->user()->isAdmin() && isset($lowStockAlerts) && $lowStockAlerts->count() > 0)
+                <!-- Low Stock Alert Panel (Grayscale) -->
+                <div class="rounded border border-neutral-700 bg-neutral-900/50 text-neutral-200 px-4 py-4 shadow-sm space-y-3">
+                    <div class="flex items-center gap-2 font-bold text-base text-white">
+                        <svg class="w-6 h-6 flex-shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <span>Inventory Re-order Alerts</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        @foreach($lowStockAlerts as $alert)
+                            <div class="bg-neutral-800/40 border border-neutral-700/60 rounded p-3 flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-white">{{ $alert->name }}</h4>
+                                    <p class="text-xs text-neutral-300 mt-1">
+                                        Current Stock: <span class="font-bold text-white">{{ $alert->available_count }}</span>
+                                    </p>
+                                </div>
+                                <div class="mt-3 flex items-center justify-between border-t border-neutral-700/40 pt-2 text-xs text-neutral-400">
+                                    <span>Re-order Level: {{ $alert->reorder_level }}</span>
+                                    <span>Safety Stock: {{ $alert->safety_stock }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- Snipe-IT 6-Color Stats Cards (Black and White Theme) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                 <!-- Assets -->
